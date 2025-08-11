@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>响应式两列布局</title>
+    <!-- 代码高亮 -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"/>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding-top: 70px; /* 为固定导航栏留出空间 */
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.light-mode {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        body.dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        body.dark-mode .header {
+            background-color: #1e1e1e;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        body.dark-mode .header h1 {
+            color: #e0e0e0;
+        }
+
+        .header-nav ul {
+            display: flex;
+            list-style: none;
+            gap: 20px;
+        }
+
+        .header-nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        body.dark-mode .header-nav a {
+            color: #e0e0e0;
+        }
+
+        .header-nav a:hover {
+            color: #e697ba;
+        }
+
+        body.dark-mode .header-nav a:hover {
+            color: #9370db;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #333;
+            margin-left: 15px;
+        }
+
+        body.dark-mode .theme-toggle {
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            display: flex;
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgb(230, 151, 186);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            align-self: stretch; /* 与主内容同高 */
+        }
+
+        body.dark-mode .sidebar {
+            background: #6a5acd;
+        }
+
+        .main-content {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            align-self: stretch; /* 与侧边栏同高 */
+        }
+
+        body.dark-mode .main-content {
+            background: #1e1e1e;
+        }
+
+        /* Debug Proxy 样式 - 粉色/白色风格 */
+        .debug-proxy-card.light {
+            background: white;
+            border-radius: 12px;
+            padding: 32px 40px;
+            max-width: 840px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0,0,0,.1);
+            margin: 0 auto;
+            color: #333;
+        }
+
+        /* Debug Proxy 样式 - 暗色模式（紫色/黑色） */
+        .debug-proxy-card.dark {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 32px 40px;
+            max-width: 840px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0,0,0,.3);
+            margin: 0 auto;
+            color: #e0e0e0;
+        }
+
+        .debug-proxy-card h1 {
+            font-size: 32px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        /* 粉色主题标题 */
+        .debug-proxy-card.light h1 {
+            background: linear-gradient(90deg, #e697ba, #f8c6da);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 紫色主题标题 */
+        .debug-proxy-card.dark h1 {
+            background: linear-gradient(90deg, #6a5acd, #9370db);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .debug-proxy-card label {
+            display: block;
+            font-size: 14px;
+            margin: 12px 0 4px;
+        }
+
+        .debug-proxy-card.light label {
+            color: #333;
+        }
+
+        .debug-proxy-card.dark label {
+            color: #e0e0e0;
+        }
+
+        .debug-proxy-card select,
+        .debug-proxy-card input,
+        .debug-proxy-card textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .debug-proxy-card.light select,
+        .debug-proxy-card.light input,
+        .debug-proxy-card.light textarea {
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+            color: #333;
+        }
+
+        .debug-proxy-card.dark select,
+        .debug-proxy-card.dark input,
+        .debug-proxy-card.dark textarea {
+            border: 1px solid #444;
+            background: #1e1e1e;
+            color: #e0e0e0;
+        }
+
+        .debug-proxy-card button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity .2s;
+        }
+
+        .debug-proxy-card.light button {
+            background: linear-gradient(90deg, #e697ba, #f8c6da);
+            color: #fff;
+        }
+
+        .debug-proxy-card.dark button {
+            background: linear-gradient(90deg, #6a5acd, #9370db);
+            color: #fff;
+        }
+
+        .debug-proxy-card button:hover {
+            opacity: .9;
+        }
+
+        .debug-proxy-card button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 24px;
+            max-height: 400px;
+            overflow: auto;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .debug-proxy-card.light #result {
+            background: #f9f9f9;
+            color: #333;
+        }
+
+        .debug-proxy-card.dark #result {
+            background: #1e1e1e;
+            color: #e0e0e0;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+
+            .header h1 {
+                font-size: 1.2rem;
+            }
+
+            .header-nav ul {
+                gap: 10px;
+            }
+
+            .header-nav a {
+                font-size: 0.9rem;
+            }
+            
+            .debug-proxy-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="light-mode">
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <h1>网站标题</h1>
+        <nav class="header-nav">
+            <ul>
+                <li><a href="#home">首页</a></li>
+                <li><a href="#about">关于</a></li>
+                <li><a href="#contact">联系</a></li>
+                <li><button class="theme-toggle" onclick="toggleTheme()">🌙</button></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <h2>侧边栏</h2>
+            <nav>
+                <ul>
+                    <li><a href="#section1">选项1</a></li>
+                    <li><a href="#section2">选项2</a></li>
+                    <li><a href="#section3">选项3</a></li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <main class="main-content">
+            <div class="debug-proxy-card light" id="debugProxyCard">
+                <h1>Debug Proxy</h1>
+
+                <label for="method">Method</label>
+                <select id="method" title="选择请求方法">
+                    <option>GET</option>
+                    <option>POST</option>
+                    <option>PUT</option>
+                    <option>PATCH</option>
+                    <option>DELETE</option>
+                </select>
+
+                <label for="url">URL</label>
+                <input id="url" type="url" placeholder="https://httpbin.org/get" />
+
+                <label for="headers">Headers (JSON, optional)</label>
+                <textarea id="headers" rows="3" placeholder='{"Content-Type":"application/json"}'></textarea>
+
+                <label for="body">Body (JSON, optional)</label>
+                <textarea id="body" rows="4" placeholder='{"hello":"world"}'></textarea>
+
+                <button class="send-request" onclick="send()">Send Request</button>
+
+                <pre id="result"><!-- 高亮后的结果 --></pre>
+            </div>
+        </main>
+    </div>
+
+    <!-- 代码高亮 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script>
+        // 主题切换功能
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.querySelector('.theme-toggle');
+            const debugProxyCard = document.getElementById('debugProxyCard');
+            
+            body.classList.toggle('dark-mode');
+            body.classList.toggle('light-mode');
+            debugProxyCard.classList.toggle('dark');
+            debugProxyCard.classList.toggle('light');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+        
+        // 检查保存的主题设置
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            const body = document.body;
+            const themeToggle = document.querySelector('.theme-toggle');
+            const debugProxyCard = document.getElementById('debugProxyCard');
+            
+            if (savedTheme === 'dark') {
+                body.classList.remove('light-mode');
+                body.classList.add('dark-mode');
+                debugProxyCard.classList.remove('light');
+                debugProxyCard.classList.add('dark');
+                themeToggle.textContent = '☀️';
+            } else {
+                body.classList.remove('dark-mode');
+                body.classList.add('light-mode');
+                debugProxyCard.classList.remove('dark');
+                debugProxyCard.classList.add('light');
+                themeToggle.textContent = '🌙';
+            }
+        });
+        
+        // Debug Proxy 功能
+        const btn = document.querySelector('.send-request');
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+      
+        async function send() {
+            btn.disabled = true;
+            btn.textContent = '⏳ 发送中...';
+            result.textContent = '';
+        
+            const payload = {
+                method: method.value,
+                url: url.value,
+                headers: headers.value ? JSON.parse(headers.value) : {},
+                body: body.value
+            };
+        
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 10000); // 10 秒超时
+        
+            try {
+                const res = await fetch('/api/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+                clearTimeout(timer);
+        
+                const json = await res.json();
+                result.textContent = JSON.stringify(json, null, 2);
+                Prism.highlightElement(result);
+            } catch (e) {
+                result.textContent = e.name === 'AbortError'
+                    ? '请求超时（>10 秒），请检查目标地址或网络'
+                    : e.toString();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Send Request';
+            }
+        }
+    </script>
+</body>
+</html>
